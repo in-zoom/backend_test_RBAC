@@ -2,11 +2,11 @@ package middleware
 
 import (
 	"backend_test_RBAC/db"
+	"backend_test_RBAC/handlers"
 	"backend_test_RBAC/model"
 	"errors"
-	"github.com/alexedwards/scs"
-	"github.com/casbin/casbin"
-	"log"
+	"github.com/alexedwards/scs/v2"
+	"github.com/casbin/casbin/v2"
 	"net/http"
 )
 
@@ -25,32 +25,26 @@ func Authorizer(e *casbin.Enforcer, users model.User, session *scs.SessionManage
 
 				exists, err := users.Exists(uid, db)
 				if err != nil {
-					writeError(http.StatusInternalServerError, "ERROR", w, err)
+					handlers.ResponseError(w, http.StatusInternalServerError, errors.New("ошибка"))
 				} else if !*exists {
-					writeError(http.StatusForbidden, "ЗАПРЕЩЕНО", w, errors.New("Пользователь не существует"))
+					handlers.ResponseError(w, http.StatusForbidden, errors.New("в доступе отказано"))
 					return
 				}
 			}
 
 			res, err := e.Enforce(role, r.URL.Path, r.Method)
 			if err != nil {
-				writeError(http.StatusInternalServerError, "ERROR", w, err)
+				handlers.ResponseError(w, http.StatusInternalServerError, errors.New("ошибка"))
 				return
 			}
 			if res {
 				next.ServeHTTP(w, r)
 			} else {
-				writeError(http.StatusForbidden, "ЗАПРЕЩЕНО", w, errors.New("Несанкционированный доступ"))
+				handlers.ResponseError(w, http.StatusForbidden, errors.New("в доступе отказано"))
 				return
 			}
 		}
 
 		return http.HandlerFunc(fn)
 	}
-}
-
-func writeError(status int, message string, w http.ResponseWriter, err error) {
-	log.Print("ERROR: ", err.Error())
-	w.WriteHeader(status)
-	w.Write([]byte(message))
 }

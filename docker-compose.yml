@@ -1,0 +1,21 @@
+version: '3'
+services:
+  postgres:
+    container_name: postgres
+    restart: always
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: DB
+  
+  server:
+    env_file: Example.env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+     - 8080:8080
+    network_mode: host
