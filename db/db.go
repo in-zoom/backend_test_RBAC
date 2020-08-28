@@ -33,10 +33,12 @@ func (db *DB) CreateAdministrator(adminName, role, adminPass string) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (db *DB) CheckingForPresenceInTheDb(inputParameter, nameColumn string) (*bool, error) {
+
 	rows, err := db.Connection.Query(fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM the_users WHERE %s = '%s')", nameColumn, inputParameter))
 	if err != nil {
 		return nil, err
@@ -50,9 +52,11 @@ func (db *DB) CheckingForPresenceInTheDb(inputParameter, nameColumn string) (*bo
 			return nil, err
 		}
 	}
+
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
+
 	return &exists, nil
 }
 
@@ -63,22 +67,28 @@ func (db *DB) AddNewUser(userName, role, PasswordUser string) (err error) {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (db *DB) PasswordCheck(login string) (string, error) {
+func (db *DB) PasswordCheck(login string) (*string, error) {
 
 	rows, err := db.Connection.Query(fmt.Sprintf("SELECT password  FROM the_users WHERE user_name = '%s'", login))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	var password string
 	for rows.Next() {
 		err := rows.Scan(&password)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 	}
-	return password, nil
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return &password, nil
 }

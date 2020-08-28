@@ -17,7 +17,7 @@ func VerificationLogin(login, passUser string, db *db.DB) error {
 		return err
 	}
 
-	if pass != hashPass {
+	if *pass != hashPass {
 		return errors.New("Введен неверный логин или пароль")
 	}
 	return nil
