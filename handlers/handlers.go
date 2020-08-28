@@ -8,7 +8,7 @@ import (
 	"backend_test_RBAC/validation"
 	"backend_test_RBAC/verification"
 	"encoding/json"
-	"github.com/alexedwards/scs"
+	"github.com/alexedwards/scs/v2"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 )
@@ -20,37 +20,37 @@ func RegistrationUser(db *db.DB) httprouter.Handle {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		err := json.NewDecoder(r.Body).Decode(&addedUser)
 		if err != nil {
-			responseError(w, http.StatusBadRequest, err)
+			ResponseError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		err = db.СreateTable()
 		if err != nil {
-			responseError(w, http.StatusInternalServerError, err)
+			ResponseError(w, http.StatusInternalServerError, err)
 			return
 		}
 
 		err = db.CreateAdministrator(data.AdminName, data.Role, data.AdminPass)
 		if err != nil {
-			responseError(w, http.StatusInternalServerError, err)
+			ResponseError(w, http.StatusInternalServerError, err)
 			return
 		}
 
 		resultNameUser, err := validation.ValidateNameUser(addedUser.Name, db)
 		if err != nil {
-			responseError(w, http.StatusBadRequest, err)
+			ResponseError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		hashPasswordUser, err := hashing.ValidateAndHashPasswordUser(addedUser.Password)
 		if err != nil {
-			responseError(w, http.StatusBadRequest, err)
+			ResponseError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		err = db.AddNewUser(resultNameUser, data.UserRole, hashPasswordUser)
 		if err != nil {
-			responseError(w, http.StatusInternalServerError, err)
+			ResponseError(w, http.StatusInternalServerError, err)
 			return
 		}
 		responceOk(w, http.StatusOK, "Вы успешно зарегистрированы")
@@ -64,24 +64,24 @@ func Login(users model.User, session scs.SessionManager, db *db.DB) httprouter.H
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		err := json.NewDecoder(r.Body).Decode(&auth)
 		if err != nil {
-			responseError(w, http.StatusBadRequest, err)
+			ResponseError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		err = verification.VerificationLogin(auth.Username, auth.Password, db)
 		if err != nil {
-			responseError(w, http.StatusBadRequest, err)
+			ResponseError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		user, err := users.FindByName(auth.Username, db)
 		if err != nil {
-			responseError(w, http.StatusBadRequest, err)
+			ResponseError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		if err := session.RenewToken(r.Context()); err != nil {
-			responseError(w, http.StatusInternalServerError, err)
+			ResponseError(w, http.StatusInternalServerError, err)
 			return
 		}
 
@@ -97,7 +97,7 @@ func Logout(session scs.SessionManager) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 		if err := session.Destroy(r.Context()); err != nil {
-			responseError(w, http.StatusInternalServerError, err)
+			ResponseError(w, http.StatusInternalServerError, err)
 			return
 		}
 		responceOk(w, http.StatusOK, "Вы вышли из учетной записи")
@@ -131,7 +131,7 @@ func responceOk(w http.ResponseWriter, code int, message string) {
 	json.NewEncoder(w).Encode(m)
 }
 
-func responseError(w http.ResponseWriter, code int, err error) {
+func ResponseError(w http.ResponseWriter, code int, err error) {
 	w.WriteHeader(code)
 	errMessage := data.ErrMessage{Message: err.Error()}
 	json.NewEncoder(w).Encode(errMessage)

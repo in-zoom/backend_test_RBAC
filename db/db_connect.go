@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"log"
 	"os"
 )
 
@@ -17,7 +18,8 @@ func OpenDB() (*DB, error) {
 	}
 
 	if err = db.Ping(); err != nil {
-		return nil, err
+		log.Print(err)
+		OpenDB()
 	}
 
 	return &DB{Connection: db}, nil

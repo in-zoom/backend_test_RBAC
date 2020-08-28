@@ -3,3 +3,4 @@ p, anonymous, /login, *
 p, anonymous, /registration, *
 p, user, /logout, *
 p, user, /user/*, *
+p, user, /registration, *
